@@ -1,0 +1,65 @@
+﻿@model IEnumerable<FootBallStat.PlayersInMatch>
+
+@{
+    ViewData["Title"] = "Гравці в матчі";
+}
+
+<h1>Гравці в матчі</h1>
+
+@if (User.IsInRole("admin"))
+{
+    <p>
+        @Html.ActionLink("Додати гравця до матчу", "Create", new { matchId = @ViewBag.MatchId}, new { @class = "btn btn-primary" })
+    </p>
+}
+<table class="table">
+    <thead>
+        <tr>           
+            <th>
+                @Html.DisplayNameFor(model => model.Player)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Player.Team.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Match)
+            </th> 
+            <th>
+                @Html.DisplayNameFor(model => model.PlayerGoals)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Player.Name)
+            </td> 
+            <td>
+                @Html.DisplayFor(modelItem => item.Player.Team.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Match.Team1.Name)  
+                    |
+                @Html.DisplayFor(modelItem => item.Match.Team2.Name)
+            </td>
+             <td>
+                @Html.DisplayFor(modelItem => item.PlayerGoals)
+            </td>
+            @if (User.IsInRole("admin"))
+            {
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id"><button class="btn btn-success"> Змінити </button></a> 
+                <a asp-action="Details" asp-route-id="@item.Id"><button class="btn btn-success"> Деталі </button></a> 
+                <a asp-action="Delete" asp-route-id="@item.Id"><button class="btn btn-danger"> Видалити </button></a>
+            </td>
+            }
+            else
+            {
+                <td><a asp-action="Details" asp-route-id="@item.Id"><button class="btn btn-success"> Деталі </button></a></td>
+            }
+        </tr>
+}
+    </tbody>
+</table>

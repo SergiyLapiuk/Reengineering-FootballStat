@@ -1,0 +1,107 @@
+﻿@model IEnumerable<FootBallStat.Team>
+
+@{
+    ViewData["Title"] = "Команди";
+}
+
+<h1>Команди</h1>
+
+@if (User.IsInRole("admin"))
+{
+    <p>
+        <a asp-action="Create"><button class="btn btn-primary"> Додати команду </button></a>
+    </p>
+}
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            @if (User.IsInRole("admin")) 
+            {
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id"><button class="btn btn-success"> Змінити </button></a> 
+                <a asp-action="Details" asp-route-id="@item.Id"><button class="btn btn-success"> Гравці </button></a> 
+                <a asp-action="Delete" asp-route-id="@item.Id"><button class="btn btn-danger"> Видалити </button></a>
+            </td>
+            }
+            else 
+            {
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id"><button class="btn btn-success"> Гравці </button></a> 
+                </td>
+            }
+        </tr>
+}
+    </tbody>
+</table>
+
+
+<div class="container"> 
+    <div id="chart1"></div> 
+</div> 
+ 
+@section scripts{
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> 
+ 
+    <script> 
+        google.charts.load('current', { 'packages': ['corechart'] }); 
+        google.charts.setOnLoadCallback(drawChart); 
+        function drawChart() { 
+            $.get('/api/Chart/JsonDataTeams', function (JsonData) { 
+                data = google.visualization.arrayToDataTable(JsonData, false); 
+                var option = { 
+                    title: "Співвідношення кількості гравців та команд", 
+                    width: 1000, 
+                    height: 400 
+                }; 
+                chart = new google.visualization.ColumnChart(document.getElementById('chart1')); 
+                chart.draw(data, option); 
+            }) 
+        } 
+    </script> 
+}
+
+@if (User.IsInRole("admin")) 
+{
+<div>
+         <p class="text-danger">@ViewBag.f</p>
+</div>
+
+<div>
+    <h3>Оберіть excel-файл для завантаження</h3>
+    @using(Html.BeginForm("Import", "Teams", FormMethod.Post, new { enctype = "multipart/form-data", id =
+    "frm-excel"}))
+    {
+        <div>
+            Завантажте Excel-файл:
+            <input  type="file" name="fileExcel" id="fileExcel"/>
+            <div>
+                <input type="submit" value="Завантажити" class="btn btn-primary"/>
+            </div>
+        </div>
+    }
+</div>
+
+
+
+<div>
+    <h3>Завантаження інформації у файл</h3>
+    <a asp-action="Export"><button class="btn btn-primary">Завантажити</button></a>
+</div>
+}else{
+    <div>
+    <h3>Завантаження інформації у файл</h3>
+    <a asp-action="Export"><button class="btn btn-primary">Завантажити</button></a>
+</div>
+}

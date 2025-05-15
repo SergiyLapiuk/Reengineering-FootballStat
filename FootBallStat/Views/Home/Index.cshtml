@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "FootBallStat";
+}
+
+@if(User.Identity.IsAuthenticated)
+{
+    <p> </p>
+<p>@User.Identity.Name</p>
+
+<form method="post" asp-controller="Account" asp-action="Logout">
+@*    <input type="submit" value="Вихід" />*@
+    <button class="btn btn-danger"> Вихід </button>
+</form>
+
+}
+else
+{
+    <p> </p>
+<a asp-controller="Account" asp-action="Login"><button class="btn btn-info"> Вхід </button></a>
+<a asp-controller="Account" asp-action="Register"><button class="btn btn-success"> Реєстрація </button></a>
+
+}
+
+<div class="text-center">
+    <h1 class="display-4">🥇 | FootBallStat | 🇺🇦</h1>
+@*    <iframe src="https://giphy.com/embed/CUj0hqIl3miIYQODkB" width="385" height="480" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>*@
+    <iframe allow="fullscreen" frameBorder="0" height="480" src="https://giphy.com/embed/hxHDWlKOIRdAPs7uPX/video" width="480"></iframe>
+</div>

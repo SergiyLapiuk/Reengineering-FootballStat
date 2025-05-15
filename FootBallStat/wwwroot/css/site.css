@@ -1,0 +1,31 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.normal {
+    all: unset;
+    width: 90%;
+    border: 1px solid white;
+    text-align: left;
+    margin: 10px;
+    padding: 10px;
+}
+
+    .normal:hover {
+        background: darkgray;
+    }

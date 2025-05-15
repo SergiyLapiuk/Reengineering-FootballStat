@@ -1,0 +1,95 @@
+﻿@model IEnumerable<FootBallStat.Match>
+
+@{
+    ViewData["Title"] = "Матчі";
+}
+
+<h1>Матчі</h1>
+@if (User.IsInRole("admin"))
+{
+    <p>
+    <a asp-action="Create"><button class="btn btn-primary"> Додати матч</button></a>
+</p>}
+<table class="table">
+    <thead>
+        <tr>
+@*            <th>
+                @Html.DisplayNameFor(model => model.Id)
+            </th>*@
+            <th>
+                @Html.DisplayNameFor(model => model.Date)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Championship)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Team1)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Team2)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+@*            <td>
+                @Html.DisplayFor(modelItem => item.Id)
+            </td>*@
+            <td>
+                @Html.DisplayFor(modelItem => item.Date)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Championship.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Team1.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Team2.Name)
+            </td>
+                @if (User.IsInRole("admin"))
+                {
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id"><button class="btn btn-success"> Змінити </button></a> 
+                        <a asp-action="Details" asp-route-id="@item.Id"><button class="btn btn-success"> Гравці </button></a> 
+                        <a asp-action="Delete" asp-route-id="@item.Id"><button class="btn btn-danger"> Видалити </button></a>
+                    </td>
+                }
+                else
+                {
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.Id"><button class="btn btn-success"> Гравці </button></a> 
+                    </td>
+                }
+        </tr>
+}
+    </tbody>
+</table>
+
+<div class="container"> 
+    <div id="chart1"></div> 
+</div> 
+ 
+@section scripts{ 
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> 
+ 
+    <script> 
+
+        google.charts.load('current', { 'packages': ['corechart'] }); 
+        google.charts.setOnLoadCallback(drawChart); 
+        function drawChart() { 
+            $.get('/api/Chart/JsonDataMatches', function (JsonData) { 
+                data = google.visualization.arrayToDataTable(JsonData, false); 
+                var option = { 
+                    title: "Співвідношення кількості гравців та матчів", 
+                    width: 500, 
+                    height: 400 
+                }; 
+                chart = new google.visualization.PieChart(document.getElementById('chart1')); 
+                chart.draw(data, option); 
+            }) 
+        } 
+    </script> 
+}

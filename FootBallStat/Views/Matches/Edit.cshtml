@@ -1,0 +1,64 @@
+﻿@model FootBallStat.Match
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Редагування</h1>
+
+<h4>Матч</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            
+@*            <div class="form-group" style="display: none">
+                <label asp-for="Team1Id" class="control-label"></label>
+                <select asp-for="Team1Id" class="form-control" asp-items="ViewBag.Team1Id"></select>
+                <span asp-validation-for="Team1Id" class="text-danger"></span>
+            </div>
+            <div class="form-group" style="display: none">
+                <label asp-for="Team2Id" class="control-label"></label>
+                <select asp-for="Team2Id" class="form-control" asp-items="ViewBag.Team2Id"></select>
+                <span asp-validation-for="Team2Id" class="text-danger"></span>
+            </div>
+            <div class="form-group" style="display: none">
+                <label asp-for="ChampionshipId" class="control-label"></label>
+                <select asp-for="ChampionshipId" class="form-control" asp-items="ViewBag.ChampionshipId"></select>
+                <span asp-validation-for="ChampionshipId" class="text-danger"></span>
+            </div>*@
+
+            <table class="table table-hover">
+                <tbody>
+                    <tr class="table-primary">
+                        <th scope="row">Матч:</th>
+                        <td>@Model.Team1.Name</td>
+                        <td>@Model.Team2.Name</td>
+                        <td>@Model.Championship.Name</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="form-group">
+                <label asp-for="Date" class="control-label"></label>
+                <input asp-for="Date" class="form-control" />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Зберегти" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+     <div>
+         <p class="text-danger">@ViewData["ErrorMessage"]</p>
+     </div> 
+<div>
+    <a asp-action="Index"><button class="btn btn-success"> Повернутися до матчів </button></a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

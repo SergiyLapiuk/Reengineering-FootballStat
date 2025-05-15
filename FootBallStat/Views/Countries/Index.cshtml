@@ -1,0 +1,102 @@
+﻿@model IEnumerable<FootBallStat.Country>
+
+@{
+    ViewData["Title"] = "Країни";
+}
+
+<h1>Країни</h1>
+
+@*<p>
+    <a asp-action="Create"><button class="btn btn-primary"> Додати </button></a>
+</p>*@
+<table class="table">
+@*    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th></th>
+        </tr>
+    </thead>*@
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                <h4>@Html.DisplayFor(modelItem => item.Name)</h4>
+            </td>
+            @if (User.IsInRole("admin"))
+                {
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id"> <button class="btn btn-success"> Змінити </button></a>
+                        <a asp-action="Details" asp-route-id="@item.Id"><button class="btn btn-success"> Чемпіонати </button></a> 
+                        <a asp-action="Delete" asp-route-id="@item.Id"><button class="btn btn-danger"> Видалити </button></a>
+                    </td>
+                }
+                else
+                {
+                    <td><a asp-action="Details" asp-route-id="@item.Id"><button class="btn btn-success"> Чемпіонати </button></a>  </td> 
+                }
+        </tr>
+}
+    </tbody>
+</table>
+
+@if (User.IsInRole("admin"))
+{
+    <p>
+        <a asp-action="Create"><button class="btn btn-primary"> Додати </button></a>
+    </p>
+}
+<div class="container"> 
+    <div id="chart1"></div> 
+</div> 
+ 
+@section scripts{ 
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script> 
+ 
+    <script> 
+
+        google.charts.load('current', { 'packages': ['corechart'] }); 
+        google.charts.setOnLoadCallback(drawChart); 
+        function drawChart() { 
+            $.get('/api/Chart/JsonDataCountries', function (JsonData) { 
+                data = google.visualization.arrayToDataTable(JsonData, false); 
+                var option = { 
+                    title: "Співвідношення кількості чемпіонатів та країн", 
+                    width: 1000, 
+                    height: 400 
+                }; 
+                chart = new google.visualization.ScatterChart(document.getElementById('chart1')); 
+                chart.draw(data, option); 
+            }) 
+        } 
+    </script> 
+}
+
+
+@if (User.IsInRole("admin"))
+{
+<div>
+         <p class="text-danger">@ViewBag.f</p>
+</div>
+
+<div>
+    <h3>Оберіть excel-файл для завантаження</h3>
+    @using(Html.BeginForm("Import", "Countries", FormMethod.Post, new { enctype = "multipart/form-data", id =
+    "frm-excel"}))
+    {
+        <div>
+            Завантажте Excel-файл:
+            <input  type="file" name="fileExcel" id="fileExcel"/>
+            <div>
+                <input type="submit" value="Завантажити" class="btn btn-primary"/>
+            </div>
+        </div>
+    }
+</div>
+
+<div>
+    <h3>Завантаження інформації у файл</h3>
+    <a asp-action="Export"><button class="btn btn-primary">Завантажити</button></a>
+</div>
+}

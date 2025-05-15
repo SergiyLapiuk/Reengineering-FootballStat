@@ -1,0 +1,40 @@
+﻿@model FootBallStat.PlayersInMatch
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Деталі</h1>
+
+<div>
+    <h4>Гравець в матчі:</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.PlayerGoals)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.PlayerGoals)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Match)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Match.Id)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Player)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Player.Name)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Index"
+    asp-route-id="@Model.MatchId"
+    asp-route-team1id="@Model.Match.Team1Id"
+    asp-route-team2id="@Model.Match.Team2Id"
+    asp-route-championshipid="@Model.Match.ChampionshipId"
+    asp-route-date="@Model.Match.Date"><button class="btn btn-success"> Повернутися до списку </button></a>
+</div>

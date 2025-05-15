@@ -1,0 +1,23 @@
+﻿@model FootBallStat.Country
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Чемпіонати країни @ViewBag.Country.Name</h1>
+
+<div>
+    @foreach(var item in @ViewBag.Country.Championships)
+    {
+        <form asp-controller="Championships" asp-action="Details" asp-route-id="@item.Id">
+            @*<button class="normal">
+                @item.Name
+            </button>*@
+            <button class="btn btn-success"   style="width: 90%; padding: 10px; margin: 10px">@item.Name</button>
+        </form>
+    }
+
+</div>
+<div>
+    <a asp-action="Index"><button class="btn btn-primary"> Повернутися до країн </button></a>
+</div>
