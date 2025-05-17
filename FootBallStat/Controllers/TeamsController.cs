@@ -52,8 +52,6 @@ namespace FootBallStat.Controllers
         }
 
         // POST: Teams/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name")] Team team)
@@ -100,8 +98,6 @@ namespace FootBallStat.Controllers
         }
 
         // POST: Teams/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Team team)
@@ -224,9 +220,6 @@ namespace FootBallStat.Controllers
                             await _context.SaveChangesAsync();
                             if (ex != null)
                             {
-                                //workBook.Dispose();
-                                //stream.Dispose();
-                                //return RedirectToAction("Index", "Teams", new { f = ex });
                                 errordate += ex;
                             }
                         }

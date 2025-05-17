@@ -25,24 +25,27 @@ namespace FootBallStat.Controllers
             return View(await dBFootballStatContext.ToListAsync());
         }
 
+        private Championship GetChampionshipWithMatches(int id) =>
+            _context.Championships
+                .Where(c => c.Id == id)
+                .Include(c => c.Matches).ThenInclude(m => m.Team1)
+                .Include(c => c.Matches).ThenInclude(m => m.Team2)
+                .FirstOrDefault();
+
+        private IEnumerable<Team> GetDistinctTeams(Championship champ)
+        {
+            return champ.Matches
+                .SelectMany(m => new[] { m.Team1, m.Team2 })
+                .Distinct();
+        }
+
+
+
         // GET: Championships/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var champ = (from Championships in _context.Championships
-                         where Championships.Id == id
-                         select Championships).Include(x => x.Matches).ThenInclude(x => x.Team1).Include(x => x.Matches).ThenInclude(x => x.Team2).FirstOrDefault();
-            List<Team> teams = new List<Team>();
-            foreach (var m in champ.Matches)
-            {
-                teams.Add(m.Team1);
-                teams.Add(m.Team2);
-            }
-            ViewBag.Teams = teams.Distinct();
+            var champ = GetChampionshipWithMatches(id.Value);
+            ViewBag.Teams = GetDistinctTeams(champ);
             ViewBag.Championship = champ;
             return View();
         }
@@ -67,13 +70,16 @@ namespace FootBallStat.Controllers
         // GET: Championships/Create
         public IActionResult Create()
         {
-            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Name");
+            PopulateCountryList();
             return View();
         }
 
-        // POST: Championships/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        private void PopulateCountryList(int? selectedId = null)
+        {
+            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Name", selectedId);
+        }
+
+        // POST: Championships/Create.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,CountryId,Name")] Championship championship)
@@ -91,7 +97,7 @@ namespace FootBallStat.Controllers
             {
                 ViewData["ErrorMessage"] = "Чемпіонат з такою назвою в обраній країні вже існує!";
             }
-            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Name", championship.CountryId);
+            PopulateCountryList(championship.CountryId);
             return View(championship);
         }
 
@@ -117,52 +123,51 @@ namespace FootBallStat.Controllers
             {
                 return NotFound();
             }
-            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Name", championship.CountryId);
+            PopulateCountryList(championship.CountryId);
             return View(championship);
         }
 
-        // POST: Championships/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        private async Task<bool> TryUpdateChampionshipAsync(Championship championship)
+        {
+            try
+            {
+                _context.Update(championship);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return ChampionshipExists(championship.Id);
+            }
+        }
+
+        private void SetDuplicateNameMessage()
+        {
+            ViewData["ErrorMessage"] = "Чемпіонат з такою назвою в обраній країні вже існує!";
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,CountryId,Name")] Championship championship)
         {
             if (id != championship.Id)
-            {
                 return NotFound();
+
+            if (!IsUnique(championship.Name, championship.CountryId))
+            {
+                SetDuplicateNameMessage();
+                PopulateCountryList(championship.CountryId);
+                return View(championship);
             }
 
-            if (IsUnique(championship.Name, championship.CountryId))
-            {
-                if (ModelState.IsValid)
-                {
-                    try
-                    {
-                        _context.Update(championship);
-                        await _context.SaveChangesAsync();
-                    }
-                    catch (DbUpdateConcurrencyException)
-                    {
-                        if (!ChampionshipExists(championship.Id))
-                        {
-                            return NotFound();
-                        }
-                        else
-                        {
-                            throw;
-                        }
-                    }
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-            else
-            {
-                ViewData["ErrorMessage"] = "Чемпіонат з такою назвою в обраній країні вже існує!";
-            }
-            ViewData["CountryId"] = new SelectList(_context.Countries, "Id", "Name", championship.CountryId);
+            if (ModelState.IsValid && await TryUpdateChampionshipAsync(championship))
+                return RedirectToAction(nameof(Index));
+
+            PopulateCountryList(championship.CountryId);
             return View(championship);
         }
+
+
 
         // GET: Championships/Delete/5
         public async Task<IActionResult> Delete(int? id)

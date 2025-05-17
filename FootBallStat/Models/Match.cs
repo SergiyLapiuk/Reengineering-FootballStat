@@ -9,13 +9,6 @@ namespace FootBallStat
         public override bool IsValid(object value)
         {
             DateTime dateTime = Convert.ToDateTime(value);
-            //var dateString = "1/1/2018 0:00:00 AM";
-            //DateTime date1 = DateTime.Parse(dateString,
-            //                          System.Globalization.CultureInfo.InvariantCulture);
-            //var dateString2 = "1/1/2024 0:00:00 AM";
-            //DateTime date2 = DateTime.Parse(dateString2,
-            //                          System.Globalization.CultureInfo.InvariantCulture);
-            //return date1 <= dateTime && dateTime <= date2;
 
             DateTime dateNow = DateTime.UtcNow;
 

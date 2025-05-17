@@ -35,18 +35,16 @@ namespace FootBallStat.Controllers
                 return NotFound();
             }
 
-            //var country = await _context.Countries
-            //    .FirstOrDefaultAsync(m => m.Id == id);
-            //if (country == null)
-            //{
-            //    return NotFound();
-            //}
-
             ViewBag.Country = (from Countries in _context.Countries
                                where Countries.Id == id
                                select Countries).Include(x => x.Championships).FirstOrDefault();
 
             return View();
+        }
+
+        private void SetDuplicateCountryMessage()
+        {
+            ViewData["ErrorMessage"] = "Така країна вже додана!";
         }
 
         // GET: Countries/Create
@@ -56,8 +54,6 @@ namespace FootBallStat.Controllers
         }
 
         // POST: Countries/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name")] Country country)
@@ -73,7 +69,7 @@ namespace FootBallStat.Controllers
             }
             else
             {
-                ViewData["ErrorMessage"] = "Така країна вже додана!";
+                SetDuplicateCountryMessage();
             }
             return View(country);
         }
@@ -104,46 +100,41 @@ namespace FootBallStat.Controllers
         }
 
         // POST: Countries/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        private async Task<bool> TryUpdateCountryAsync(Country country)
+        {
+            try
+            {
+                _context.Update(country);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return CountryExists(country.Id);
+            }
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Country country)
         {
             if (id != country.Id)
-            {
                 return NotFound();
+
+            if (!IsUnique(country.Name))
+            {
+                SetDuplicateCountryMessage();
+                return View(country);
             }
 
-            if (IsUnique(country.Name))
-            {
-                if (ModelState.IsValid)
-                {
-                    try
-                    {
-                        _context.Update(country);
-                        await _context.SaveChangesAsync();
-                    }
-                    catch (DbUpdateConcurrencyException)
-                    {
-                        if (!CountryExists(country.Id))
-                        {
-                            return NotFound();
-                        }
-                        else
-                        {
-                            throw;
-                        }
-                    }
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-            else
-            {
-                ViewData["ErrorMessage"] = "Така країна вже додана!";
-            }
+            if (ModelState.IsValid && await TryUpdateCountryAsync(country))
+                return RedirectToAction(nameof(Index));
+
             return View(country);
         }
+
 
         // GET: Countries/Delete/5
         public async Task<IActionResult> Delete(int? id)
@@ -163,6 +154,12 @@ namespace FootBallStat.Controllers
             return View(country);
         }
 
+        private bool HasChampionships(int countryId)
+        {
+            return _context.Championships.Any(c => c.CountryId == countryId);
+        }
+
+
         // POST: Countries/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
@@ -170,8 +167,7 @@ namespace FootBallStat.Controllers
         {
             var country = await _context.Countries.FindAsync(id);
 
-            var count_champ = _context.Championships.Where(b => b.CountryId == id).Count();
-            if (count_champ != 0)
+            if (HasChampionships(id))
             {
                 ViewData["ErrorMessage"] = "Видалення не можливе!";
                 return View(country);
@@ -189,83 +185,83 @@ namespace FootBallStat.Controllers
             return _context.Countries.Any(e => e.Id == id);
         }
 
+        private IActionResult ReturnError(string reason)
+        {
+            return RedirectToAction("Index", "Countries", new { f = reason });
+        }
+
+        private string? ProcessWorksheet(IXLWorksheet worksheet)
+        {
+            var c = _context.Countries.Where(x => x.Name.Contains(worksheet.Name)).ToList();
+            var newcoun = c.FirstOrDefault() ?? new Country { Name = worksheet.Name };
+            if (c.Count == 0) _context.Countries.Add(newcoun);
+
+            return ImportChampionshipsFromWorksheet(worksheet, newcoun);
+        }
+
+        private string? ImportChampionshipsFromWorksheet(IXLWorksheet worksheet, Country newcoun)
+        {
+            var championshipsToAdd = new List<Championship>();
+
+            foreach (var row in worksheet.RowsUsed().Skip(1))
+            {
+                var name = row.Cell(1).GetValue<string>().Trim();
+                if (string.IsNullOrWhiteSpace(name)) continue;
+
+                if (!IsUniqueChamp(name, newcoun.Id) &&
+                    championshipsToAdd.Any(c => c.Name == name && c.CountryId == newcoun.Id))
+                    continue;
+
+                var championship = new Championship
+                {
+                    Name = name,
+                    Country = newcoun
+                };
+
+                championshipsToAdd.Add(championship);
+                _context.Championships.Add(championship);
+            }
+
+            return null;
+        }
+
+
+        private string? ImportWorksheets(XLWorkbook workBook)
+        {
+            foreach (var worksheet in workBook.Worksheets)
+            {
+                var result = ProcessWorksheet(worksheet);
+                if (result != null) return result;
+            }
+            return null;
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Import(IFormFile fileExcel)
         {
-            if(ModelState.IsValid)
+            if (!ModelState.IsValid) return RedirectToAction(nameof(Index));
+
+            if (fileExcel == null || fileExcel.Length == 0)
+                return ReturnError("Файл не прикріплений або порожній");
+
+            using var stream = new FileStream(fileExcel.FileName, FileMode.Create);
+            await fileExcel.CopyToAsync(stream);
+
+            try
             {
-                if (fileExcel != null)
-                {
-                    var stream = new FileStream(fileExcel.FileName, FileMode.Create);
-                    await fileExcel.CopyToAsync(stream);
-                    try {
-                        XLWorkbook workBook = new XLWorkbook(stream, XLEventTracking.Disabled);
-                        foreach (IXLWorksheet worksheet in workBook.Worksheets)
-                        {
-                            Country newcoun;
-                            var c = (from coun in _context.Countries
-                                     where coun.Name.Contains(worksheet.Name)
-                                     select coun).ToList();
-                            if (c.Count > 0)
-                            {
-                                newcoun = c[0];
-                            }
-                            else
-                            {
-                                newcoun = new Country();
-                                newcoun.Name = worksheet.Name;
-                                _context.Countries.Add(newcoun);
-                            }
-                            var ex = AllRows(worksheet, newcoun);
-                            if(ex != null)
-                            {
-                                workBook.Dispose();
-                                stream.Dispose();
-                                return RedirectToAction("Index", "Countries", new { f = "Некоректні дані" });
-                            }
-                        }
-                        workBook.Dispose();
-                        stream.Dispose();
-                    }
-                    catch
-                    {
-                        return RedirectToAction("Index", "Countries", new { f = "Некоректні дані" });
-                    }           
-                }
-                else
-                {
-                    return RedirectToAction("Index", "Countries", new { f = "Не прикріплений файл" });
-                }
-                await _context.SaveChangesAsync();
+                using var workBook = new XLWorkbook(stream, XLEventTracking.Disabled);
+                var result = ImportWorksheets(workBook);
+                if (result != null)
+                    return ReturnError(result);
             }
+            catch
+            {
+                return ReturnError("Некоректні дані");
+            }
+
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
-        }
-
-        public string? AllRows(IXLWorksheet worksheet, Country newcoun)
-        {
-                var champfil = new List<Championship>();
-                foreach (IXLRow row in worksheet.RowsUsed().Skip(1))
-                {
-                    try
-                    {
-                        Championship championship = new Championship();
-                        championship.Name = row.Cell(1).Value.ToString();
-                        championship.Country = newcoun;
-                        //champfil.Add(championship);
-                        if (IsUniqueChamp(championship.Name, newcoun.Id) && IsUniqueChampFile(champfil, championship.Name, newcoun.Id))
-                        {
-                            _context.Championships.Add(championship);
-                            champfil.Add(championship);
-                        }
-
-                    }
-                    catch (Exception e)
-                    {
-                        return "Не коректні дані.";
-                    }
-                }
-            return null;
         }
 
         bool IsUniqueChamp(string name, int countryId)

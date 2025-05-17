@@ -24,7 +24,6 @@ namespace FootBallStat.Controllers
                 string match_name = m.Team1.Name + " | " + m.Team2.Name;
                 matPlayerInMatch.Add(new object[] { match_name, m.PlayersInMatches.Count() });
             }
-            //matPlayerInMatch.AddRange(matches.Select(t => new object[] { t.Id, t.PlayersInMatches.Count }));
 
             return new JsonResult(matPlayerInMatch);
         }
@@ -39,7 +38,6 @@ namespace FootBallStat.Controllers
             {
                 teamPlayer.Add(new object[] { t.Name, t.Players.Count() });
             }
-            //matPlayerInMatch.AddRange(matches.Select(t => new object[] { t.Id, t.PlayersInMatches.Count }));
 
             return new JsonResult(teamPlayer);
         }
@@ -54,7 +52,6 @@ namespace FootBallStat.Controllers
             {
                 countryChampionship.Add(new object[] { ch.Name, ch.Championships.Count() });
             }
-            //matPlayerInMatch.AddRange(matches.Select(t => new object[] { t.Id, t.PlayersInMatches.Count }));
 
             return new JsonResult(countryChampionship);
         }

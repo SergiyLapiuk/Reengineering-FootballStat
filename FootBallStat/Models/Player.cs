@@ -9,15 +9,6 @@ namespace FootBallStat
     {
         public override bool IsValid(object value)
         {
-            //DateTime dateTime = Convert.ToDateTime(value);
-            //var dateString = "1/1/1977 0:00:00 AM";
-            //DateTime date1 = DateTime.Parse(dateString,
-            //                          System.Globalization.CultureInfo.InvariantCulture);
-
-            //var dateString2 = "1/1/2005 0:00:00 AM";
-            //DateTime date2 = DateTime.Parse(dateString2,
-            //                          System.Globalization.CultureInfo.InvariantCulture);
-
             DateTime dateTime = Convert.ToDateTime(value);
             DateTime dateNow = DateTime.UtcNow; 
             var diff = dateNow.Year - dateTime.Year;
